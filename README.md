@@ -1,7 +1,8 @@
-# jsPDF-AutoTable - Table plugin for jsPDF
+# jsPDF-AutoTable - Table plugin for jsPDF - Modify for rowspan cross muliple pages
 
 **Generate PDF tables with Javascript**
 
+[fork from jspdf-autotable](https://www.npmjs.com/package/jspdf-autotable)
 This jsPDF plugin adds the ability to generate PDF tables either by parsing HTML tables or by using Javascript data directly. Check out the [demo](https://simonbengtsson.github.io/jsPDF-AutoTable/) or [examples](https://github.com/simonbengtsson/jsPDF-AutoTable/tree/master/examples).
 
 ![sample javascript table pdf](samples.png)
