@@ -406,8 +406,8 @@ function splitRowSpan(
 
   const rowHasRowSpanCell = row.hasRowSpan(table.columns)
   const rowHeight = row.getMaxCellHeight(table.columns);
-  console.log('rowHeight: ' + rowHeight, row)
-  console.log('maxRowHeight: ' + maxRowHeight, row)
+  //console.log('rowHeight: ' + rowHeight, row)
+  //console.log('maxRowHeight: ' + maxRowHeight, row)
   const minRemaining = remainingPageSpace > maxRowHeight ? maxRowHeight : remainingPageSpace;
   const rowHigherThanPage = row.getMaxCellHeight(table.columns) > minRemaining
   if (rowHigherThanPage) {

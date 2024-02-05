@@ -1,8 +1,8 @@
 /*!
  * 
- *               jsPDF AutoTable plugin v3.8.4
+ *               jsPDF AutoTable plugin v3.8.7
  *
- *               Copyright (c) 2023 Simon Bengtsson, https://github.com/simonbengtsson/jsPDF-AutoTable
+ *               Copyright (c) 2024 Simon Bengtsson, https://github.com/simonbengtsson/jsPDF-AutoTable
  *               Licensed under the MIT License.
  *               http://opensource.org/licenses/mit-license
  *
@@ -1895,20 +1895,24 @@ function splitRowSpan(doc, row, remainingPageSpace, table) {
         return false;
     }
     var rowHasRowSpanCell = row.hasRowSpan(table.columns);
-    var rowHigherThanPage = row.getMaxCellHeight(table.columns) > maxRowHeight;
+    var rowHeight = row.getMaxCellHeight(table.columns);
+    //console.log('rowHeight: ' + rowHeight, row)
+    //console.log('maxRowHeight: ' + maxRowHeight, row)
+    var minRemaining = remainingPageSpace > maxRowHeight ? maxRowHeight : remainingPageSpace;
+    var rowHigherThanPage = row.getMaxCellHeight(table.columns) > minRemaining;
     if (rowHigherThanPage) {
         if (rowHasRowSpanCell) {
             var idx_1 = table.body.indexOf(row);
             table.columns.forEach(function (c) {
                 var cell = row.cells[c.index];
                 var cellHeight = (cell === null || cell === void 0 ? void 0 : cell.height) || 0;
-                if (cellHeight > maxRowHeight) {
+                if (cellHeight > minRemaining) {
                     var nextRow = null;
                     var currentHeight = row.height;
                     var nextRowIdx = idx_1;
                     if (idx_1 >= 0) {
                         for (var v = idx_1 + 1; v < table.body.length; v++) {
-                            if (currentHeight < maxRowHeight) {
+                            if (currentHeight < minRemaining) {
                                 nextRowIdx = v;
                                 currentHeight += table.body[v].getMaxCellHeightNoRowSpan(table.columns);
                             }
@@ -1945,6 +1949,7 @@ function printFullRow(doc, table, row, isLastRow, startPos, cursor, columns) {
         printFullRow(doc, table, row, isLastRow, startPos, cursor, columns);
     }
     else if (splitRowSpan(doc, row, remainingSpace, table)) {
+        console.log('splitRowSpan', row);
         // The row fits in the current page
         printRow(doc, table, row, cursor, columns);
     }
