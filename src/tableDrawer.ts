@@ -405,7 +405,11 @@ function splitRowSpan(
   }
 
   const rowHasRowSpanCell = row.hasRowSpan(table.columns)
-  const rowHigherThanPage = row.getMaxCellHeight(table.columns) > maxRowHeight
+  const rowHeight = row.getMaxCellHeight(table.columns);
+  console.log('rowHeight: ' + rowHeight, row)
+  console.log('maxRowHeight: ' + maxRowHeight, row)
+  const minRemaining = remainingPageSpace > maxRowHeight ? maxRowHeight : remainingPageSpace;
+  const rowHigherThanPage = row.getMaxCellHeight(table.columns) > minRemaining
   if (rowHigherThanPage) {
     if (rowHasRowSpanCell) {
       let idx = table.body.indexOf(row);
@@ -414,7 +418,7 @@ function splitRowSpan(
       table.columns.forEach(c => {
         let cell = row.cells[c.index];
         let cellHeight = cell?.height || 0;
-        if (cellHeight > maxRowHeight) {
+        if (cellHeight > minRemaining) {
           let nextRow: Row | null = null;
           var currentHeight = row.height;
           let nextRowIdx = idx;
@@ -424,7 +428,7 @@ function splitRowSpan(
 
             for (let v = idx + 1; v < table.body.length; v++) {
 
-              if (currentHeight < maxRowHeight) {
+              if (currentHeight < minRemaining) {
 
                 nextRowIdx = v;
                 currentHeight += table.body[v].getMaxCellHeightNoRowSpan(table.columns);
@@ -479,6 +483,7 @@ function printFullRow(
     row.isBreakPage = false;
     printFullRow(doc, table, row, isLastRow, startPos, cursor, columns)
   } else if (splitRowSpan(doc, row, remainingSpace, table)) {
+    console.log('splitRowSpan', row)
     // The row fits in the current page
     printRow(doc, table, row, cursor, columns)
   } else if (row.canEntireRowFit(remainingSpace, columns) || row.keepPage) {
