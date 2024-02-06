@@ -13,6 +13,9 @@
       "default": "./dist/jspdf.plugin.autotable.mjs"
     }
   },
+  "publishConfig": {
+    "@trung37:registry": "https://npm.pkg.github.com"
+  },
   "types": "dist/index",
   "files": [
     "dist/*"
