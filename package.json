@@ -1,6 +1,6 @@
 {
-  "name": "jspdf-autotable",
-  "version": "3.8.1",
+  "name": "jspdf-autotable-extra",
+  "version": "3.8.9",
   "description": "Generate pdf tables with javascript (jsPDF plugin)",
   "main": "dist/jspdf.plugin.autotable.js",
   "exports": {
@@ -12,6 +12,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/jspdf.plugin.autotable.mjs"
     }
+  },
+  "publishConfig": {
+    "@trung37:registry": "https://npm.pkg.github.com"
   },
   "types": "dist/index",
   "files": [
@@ -72,7 +75,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/simonbengtsson/jsPDF-AutoTable.git"
+    "url": "https://github.com/trung37/jsPDF-AutoTable"
   },
   "keywords": [
     "pdf",
@@ -82,7 +85,7 @@
   "author": "Simon Bengtsson <dev@simonbengtsson.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/simonbengtsson/jsPDF-AutoTable/issues"
+    "url": "https://github.com/trung37/jsPDF-AutoTable/issues"
   },
-  "homepage": "https://simonbengtsson.github.io/jsPDF-AutoTable"
+  "homepage": "https://github.com/trung37/jsPDF-AutoTable"
 }
