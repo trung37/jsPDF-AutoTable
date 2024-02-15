@@ -1,6 +1,6 @@
 /*!
  * 
- *               jsPDF AutoTable plugin v3.8.10
+ *               jsPDF AutoTable plugin v3.8.11
  *
  *               Copyright (c) 2024 Simon Bengtsson, https://github.com/simonbengtsson/jsPDF-AutoTable
  *               Licensed under the MIT License.
@@ -1051,6 +1051,8 @@ exports.Table = Table;
 var Row = /** @class */ (function () {
     function Row(raw, index, section, cells, spansMultiplePages) {
         if (spansMultiplePages === void 0) { spansMultiplePages = false; }
+        this.isBreakPage = false;
+        this.keepPage = false;
         this.height = 0;
         this.raw = raw;
         if (raw instanceof config_1.HtmlRowInput) {
@@ -1065,6 +1067,10 @@ var Row = /** @class */ (function () {
     Row.prototype.getMaxCellHeight = function (columns) {
         var _this = this;
         return columns.reduce(function (acc, column) { var _a; return Math.max(acc, ((_a = _this.cells[column.index]) === null || _a === void 0 ? void 0 : _a.height) || 0); }, 0);
+    };
+    Row.prototype.getMaxCellHeightNoRowSpan = function (columns) {
+        var _this = this;
+        return columns.reduce(function (acc, column) { var _a, _b; return Math.max(acc, ((_a = _this.cells[column.index]) === null || _a === void 0 ? void 0 : _a.rowSpan) > 1 ? 0 : (((_b = _this.cells[column.index]) === null || _b === void 0 ? void 0 : _b.height) || 0)); }, 0);
     };
     Row.prototype.hasRowSpan = function (columns) {
         var _this = this;
@@ -1653,10 +1659,93 @@ function shouldPrintOnCurrentPage(doc, row, remainingPageSpace, table) {
     // In all other cases print the row on current page
     return true;
 }
+function splitRowSpan(doc, row, remainingPageSpace, table) {
+    var pageHeight = doc.pageSize().height;
+    var margin = table.settings.margin;
+    var marginHeight = margin.top + margin.bottom;
+    var maxRowHeight = pageHeight - marginHeight;
+    if (row.section === 'body') {
+        // Should also take into account that head and foot is not
+        // on every page with some settings
+        maxRowHeight -=
+            table.getHeadHeight(table.columns) + table.getFootHeight(table.columns);
+    }
+    var minRowHeight = row.getMinimumRowHeight(table.columns, doc);
+    var minRowFits = minRowHeight < remainingPageSpace;
+    if (minRowHeight > maxRowHeight) {
+        console.error("Will not be able to print row ".concat(row.index, " correctly since it's minimum height is larger than page height"));
+        return true;
+    }
+    if (!minRowFits) {
+        return false;
+    }
+    var rowHasRowSpanCell = row.hasRowSpan(table.columns);
+    //const rowHeight = row.getMaxCellHeight(table.columns);
+    //console.log('rowHeight: ' + rowHeight, row)
+    //console.log('maxRowHeight: ' + maxRowHeight, row)
+    var minRemaining = Math.min(remainingPageSpace, maxRowHeight);
+    var rowHigherThanPage = row.getMaxCellHeight(table.columns) > minRemaining;
+    if (rowHigherThanPage) {
+        if (rowHasRowSpanCell) {
+            var idx_1 = table.body.indexOf(row);
+            row.keepPage = true;
+            table.columns.forEach(function (c) {
+                var cell = row.cells[c.index];
+                var cellHeight = (cell === null || cell === void 0 ? void 0 : cell.height) || 0;
+                if (cellHeight > minRemaining) {
+                    var nextRow = null;
+                    var currentHeight = row.height;
+                    var nextRowIdx = idx_1;
+                    if (idx_1 >= 0) {
+                        for (var v = idx_1 + 1; v < table.body.length; v++) {
+                            if (currentHeight < minRemaining) {
+                                nextRowIdx = v;
+                                currentHeight += table.body[v].getMaxCellHeightNoRowSpan(table.columns);
+                            }
+                        }
+                        if (nextRowIdx - 1 <= idx_1) {
+                            nextRowIdx = idx_1 + 1;
+                        }
+                        else {
+                            nextRowIdx = nextRowIdx - 1;
+                        }
+                        nextRow = table.body[nextRowIdx];
+                    }
+                    if (!nextRow)
+                        return false;
+                    nextRow.isBreakPage = true;
+                    var height = 0;
+                    for (var v = idx_1; v <= nextRowIdx - 1; v++) {
+                        height += table.body[v].getMaxCellHeightNoRowSpan(table.columns);
+                        table.body[v].keepPage = true;
+                    }
+                    var cloneCell = new models_1.Cell(cell.raw, cell.styles, cell.section);
+                    cloneCell = (0, polyfills_1.assign)(cloneCell, cell);
+                    cloneCell.text = cell.text;
+                    cloneCell.height = cellHeight - height;
+                    nextRow.cells[c.index] = cloneCell;
+                    cell.height = height;
+                    //row.height = maxRowHeight;
+                }
+            });
+            return true;
+        }
+    }
+    return false;
+}
 function printFullRow(doc, table, row, isLastRow, startPos, cursor, columns) {
     var remainingSpace = getRemainingPageSpace(doc, table, isLastRow, cursor);
-    if (row.canEntireRowFit(remainingSpace, columns)) {
+    if (row.isBreakPage) {
+        addPage(doc, table, startPos, cursor, columns);
+        row.isBreakPage = false;
+        printFullRow(doc, table, row, isLastRow, startPos, cursor, columns);
+    }
+    else if (splitRowSpan(doc, row, remainingSpace, table)) {
+        //console.log('splitRowSpan', row)
         // The row fits in the current page
+        printRow(doc, table, row, cursor, columns);
+    }
+    else if (row.canEntireRowFit(remainingSpace, columns) || row.keepPage) {
         printRow(doc, table, row, cursor, columns);
     }
     else if (shouldPrintOnCurrentPage(doc, row, remainingSpace, table)) {
