@@ -18,8 +18,8 @@ Get jsPDF and this plugin by doing one of these things:
 ## Usage
 
 ```js
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import { jsPDF } from 'jspdf'
+import { autoTable } from 'jspdf-autotable'
 
 const doc = new jsPDF()
 
@@ -57,13 +57,20 @@ The third usage option is with downloaded or CDN dist files
 <script src="jspdf.min.js"></script>
 <script src="jspdf.plugin.autotable.min.js"></script>
 <script>
-  var doc = new jsPDF()
-  doc.autoTable({ html: '#my-table' })
+  const doc = new jsPDF()
+  const { autoTable } = window['jspdf-autotable']
+  autoTable(doc, { html: '#my-table' })
   doc.save('table.pdf')
 </script>
 ```
 
 Checkout more examples in [examples.js](examples) which is also the source code for the [demo](https://simonbengtsson.github.io/jsPDF-AutoTable/) documents.
+
+## Migrating to v4
+
+- Major: Only the `autoTable(doc, {...})` usage style is now supported and `doc.autoTable({...})` has been removed (see usage section above. Read more: #997)
+- Setting default options has been removed and can be replaced by keeping keeping track of this state yourself
+- Removed old deprecations
 
 ## Options
 
@@ -236,7 +243,6 @@ autoTable(doc, {
 
 - `doc.autoTable({ /* options */ })`
 - `autoTable(doc, { /* options */ })`
-- `jsPDF.autoTableSetDefaults({ /* ... */ })` Use for setting global defaults which will be applied for all tables
 
 If you want to know something about the last table that was drawn you can use `doc.lastAutoTable`. It has a `doc.lastAutoTable.finalY` property among other things that has the value of the last printed y coordinate on a page. This can be used to draw text, multiple tables or other content after a table.
 
