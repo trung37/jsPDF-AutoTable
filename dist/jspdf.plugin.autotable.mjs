@@ -1408,7 +1408,7 @@ function shouldPrintOnCurrentPage(doc, row, remainingPageSpace, table) {
 function splitRowSpan(doc, row, remainingPageSpace, table) {
     var pageHeight = doc.pageSize().height;
     var margin = table.settings.margin;
-    var marginHeight = margin.top + margin.bottom;
+    var marginHeight = margin.top + Math.max(5, margin.bottom);
     var maxRowHeight = pageHeight - marginHeight;
     if (row.section === 'body') {
         // Should also take into account that head and foot is not
@@ -1426,11 +1426,11 @@ function splitRowSpan(doc, row, remainingPageSpace, table) {
         return false;
     }
     var rowHasRowSpanCell = row.hasRowSpan(table.columns);
-    //const rowHeight = row.getMaxCellHeight(table.columns);
-    //console.log('rowHeight: ' + rowHeight, row)
-    //console.log('maxRowHeight: ' + maxRowHeight, row)
     var minRemaining = Math.min(remainingPageSpace, maxRowHeight);
     var rowHigherThanPage = row.getMaxCellHeight(table.columns) > minRemaining;
+    var rowHeightWithoutRowSpan = row.getMaxCellHeightNoRowSpan(table.columns);
+    if (rowHeightWithoutRowSpan >= minRemaining)
+        return false;
     if (rowHigherThanPage) {
         if (rowHasRowSpanCell) {
             var idx_1 = table.body.indexOf(row);
@@ -1471,7 +1471,6 @@ function splitRowSpan(doc, row, remainingPageSpace, table) {
                     cloneCell.height = cellHeight - height;
                     nextRow.cells[c.index] = cloneCell;
                     cell.height = height;
-                    //row.height = maxRowHeight;
                 }
             });
             return true;
